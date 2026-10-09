@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steady Paycheck</title>
+<meta name="description" content="A spreadsheet that turns lumpy freelance income into a steady monthly paycheck. Budget, tax set-aside, unpaid invoices and runway in one file. Works in Excel, Google Sheets and Numbers.">
+<meta property="og:title" content="Steady Paycheck · Lumpy income. Steady paycheck.">
+<meta property="og:image" content="og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:description" content="The money spreadsheet for freelancers: safe paycheck, quarterly tax, overdue invoices and a rate calculator. Excel, Google Sheets & Numbers. $19 once.">
+<meta property="og:type" content="product">
+<meta name="theme-color" content="#12352B">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2312352B'/%3E%3Cpath d='M6 21h4v-8h4v12h4V9h4v8h4' fill='none' stroke='%23F2B33D' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one calm column of sections; the hero pairs the promise with a live "paycheck smoother" you can drag. */
+:root {
+  --bg: #F3F6F3;
+  --surface: #FFFFFF;
+  --sunk: #E7EDE8;
+  --ink: #12352B;
+  --text: #1D2B26;
+  --muted: #5B6B64;
+  --line: #D3DDD6;
+  --pine: #1E6B52;
+  --gold: #F2B33D;
+  --gold-ink: #6B4A00;
+  --sky: #2E6F9E;
+  --bad: #B42318;
+  --bad-bg: #FDECEA;
+  --on-ink: #F3F6F3;
+  --band: #12352B;
+  --on-band: #F3F6F3;
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Hanken Grotesk", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 14px;
+  --wrap: 1120px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1714; --surface: #15211D; --sunk: #1B2A25; --ink: #E3EEE8; --text: #D5E0DA;
+    --muted: #93A59C; --line: #2A3A34; --pine: #5FC59E; --gold: #F2B33D; --gold-ink: #F6CD77;
+    --sky: #6AAEDD; --bad: #FF8A7E; --bad-bg: #3A1B18; --on-ink: #0E1714; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1714; --surface: #15211D; --sunk: #1B2A25; --ink: #E3EEE8; --text: #D5E0DA;
+  --muted: #93A59C; --line: #2A3A34; --pine: #5FC59E; --gold: #F2B33D; --gold-ink: #F6CD77;
+  --sky: #6AAEDD; --bad: #FF8A7E; --bad-bg: #3A1B18; --on-ink: #0E1714; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 400 1.0625rem/1.6 var(--f-body);
+  padding-inline: max(16px, env(safe-area-inset-left, 0px));
+}
+img, svg { max-width: 100%; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: var(--wrap); margin-inline: auto; }
+h1, h2, h3 { font-family: var(--f-display); color: var(--ink); text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.9rem, 1.3rem + 2.4vw, 2.9rem); line-height: 1.08; font-weight: 700; }
+h3 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em; }
+p { margin: 0; }
+.eyebrow { font: 600 0.78rem/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--pine); }
+.lede { color: var(--muted); font-size: 1.125rem; max-width: 60ch; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.6em;
+  font: 700 1rem/1 var(--f-body); text-decoration: none; cursor: pointer; border: 0;
+  padding: 1rem 1.4rem; border-radius: 999px; transition: transform .15s ease, box-shadow .15s ease, background .15s;
+}
+.btn-buy { background: var(--ink); color: var(--on-ink); box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 8px 24px -12px var(--ink); }
+.btn-buy:hover { transform: translateY(-1px); box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 14px 30px -14px var(--ink); }
+.btn-buy .price { font-family: var(--f-mono); font-weight: 600; background: var(--gold); color: #2B1E00; padding: .35em .55em; border-radius: 999px; font-size: .88em; }
+.btn-ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
+.btn-ghost:hover { box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+/* nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid transparent; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+.nav.scrolled { border-bottom-color: var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 1.5rem; padding-block: .8rem; }
+.logo { display: flex; align-items: center; gap: .55rem; font: 800 1.35rem/1 var(--f-display); color: var(--ink); text-decoration: none; letter-spacing: -0.03em; }
+.logo svg { width: 30px; height: 30px; flex: none; }
+.nav-links { display: flex; gap: 1.4rem; margin-left: auto; font-weight: 500; font-size: .95rem; }
+.nav-links a { text-decoration: none; color: var(--muted); }
+.nav-links a:hover { color: var(--ink); }
+.nav .btn { padding: .7rem 1.05rem; font-size: .92rem; }
+@media (max-width: 760px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
+
+/* hero */
+.hero { padding-block: clamp(2.5rem, 6vw, 5rem) clamp(3rem, 6vw, 5.5rem); display: grid; grid-template-columns: 1.02fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+.hero > * { min-width: 0; }
+.hero h1 { font-size: clamp(2.7rem, 1.6rem + 4.6vw, 5rem); line-height: .98; font-weight: 800; letter-spacing: -0.045em; }
+.hero h1 .flat { display: block; color: var(--pine); position: relative; }
+.hero h1 .wobble { display: inline-flex; align-items: flex-end; gap: .02em; }
+.hero h1 .wobble span { display: inline-block; }
+.hero .lede { margin-top: 1.4rem; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; align-items: center; }
+.works { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin-top: 1.4rem; color: var(--muted); font-size: .9rem; }
+.works span { display: inline-flex; align-items: center; gap: .4rem; }
+.works span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--pine); }
+@media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
+
+/* smoother widget */
+.smoother { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: clamp(1rem, 2.5vw, 1.5rem); box-shadow: 0 30px 60px -40px rgba(18,53,43,.45); }
+.sm-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+.sm-head .eyebrow { color: var(--muted); }
+.sm-legend { display: flex; gap: .9rem; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
+.sm-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: .35rem; vertical-align: -1px; }
+#chart { display: block; width: 100%; height: auto; margin-top: .8rem; overflow: visible; }
+#chart text { font-family: var(--f-mono); font-size: 10px; fill: var(--muted); }
+.sm-control { margin-top: 1rem; display: grid; grid-template-columns: 1fr auto; gap: .5rem 1rem; align-items: center; }
+.sm-control label { font-weight: 600; font-size: .95rem; color: var(--ink); }
+.sm-control output { font: 600 1.15rem/1 var(--f-mono); color: var(--ink); }
+input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--gold); height: 28px; }
+.sm-stats { margin-top: .9rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.sm-stats div { background: var(--sunk); border-radius: 10px; padding: .6rem .7rem; min-width: 0; }
+.sm-stats small { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.sm-stats b { font: 600 1.05rem/1.4 var(--f-mono); color: var(--ink); }
+.sm-stats .bad b { color: var(--bad); }
+.sm-verdict { margin-top: .8rem; font-size: .9rem; color: var(--muted); min-height: 1.5em; }
+.sm-verdict strong { color: var(--ink); }
+
+/* sections */
+section { padding-block: clamp(3.5rem, 8vw, 6.5rem); }
+.sec-head { display: grid; gap: 1rem; max-width: 760px; margin-bottom: clamp(2rem, 4vw, 3rem); }
+
+/* pains */
+.pains { border-top: 1px solid var(--line); }
+.pain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.pain { background: var(--bg); padding: 1.6rem; display: grid; gap: .6rem; align-content: start; min-width: 0; }
+.pain .q { font: 700 1.3rem/1.2 var(--f-display); color: var(--ink); letter-spacing: -0.015em; }
+.pain p { color: var(--muted); }
+.pain .fix { margin-top: .4rem; font-size: .92rem; color: var(--pine); font-weight: 600; }
+@media (max-width: 820px) { .pain-grid { grid-template-columns: 1fr; } }
+
+/* inside: tabbed spreadsheet mockup */
+.inside { background: var(--band); color: var(--on-band); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+.inside h2 { color: var(--on-band); }
+.inside .eyebrow { color: var(--gold); }
+.inside .lede { color: color-mix(in srgb, var(--on-band) 72%, transparent); }
+.tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.tab { font: 600 .9rem/1 var(--f-body); padding: .7rem 1rem; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--on-band) 25%, transparent); background: transparent; color: var(--on-band); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--gold); color: #2B1E00; border-color: var(--gold); }
+.sheet { background: var(--surface); color: var(--text); border-radius: 16px; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(0,0,0,.6); }
+.sheet-bar { display: flex; align-items: center; gap: .5rem; padding: .7rem 1rem; background: var(--sunk); border-bottom: 1px solid var(--line); font: 500 .8rem/1 var(--f-mono); color: var(--muted); }
+.sheet-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.sheet-bar span { margin-left: .5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel { padding: clamp(1rem, 3vw, 1.8rem); }
+.panel-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.panel-top h3 { font-size: 1.5rem; color: var(--ink); }
+.pill-month { font: 600 .9rem/1 var(--f-mono); background: #FFF7DB; color: #1D4ED8; border: 1px solid #E9DFB8; padding: .5rem .8rem; border-radius: 8px; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+.kpi { background: var(--sunk); border-radius: 10px; padding: .9rem 1rem; border-top: 3px solid var(--pine); min-width: 0; }
+.kpi small { display: block; font: 600 .7rem/1.2 var(--f-body); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.kpi b { display: block; font: 600 clamp(1.15rem, .9rem + 1vw, 1.6rem)/1.3 var(--f-mono); color: var(--ink); margin-top: .25rem; }
+.kpi span { font-size: .78rem; color: var(--muted); }
+.kpi.k-red { border-top-color: #D0694F; } .kpi.k-gold { border-top-color: var(--gold); } .kpi.k-sky { border-top-color: var(--sky); } .kpi.k-amber { border-top-color: #B07A10; }
+@media (max-width: 700px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+.tbl-wrap { overflow-x: auto; margin-top: 1.4rem; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 460px; }
+th { text-align: left; background: var(--pine); color: #fff; font-weight: 600; padding: .55rem .7rem; font-size: .82rem; }
+:root[data-theme="dark"] table:not(.cmp) th { color: #0E1714; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) table:not(.cmp) th { color: #0E1714; } }
+td { padding: .5rem .7rem; border-bottom: 1px solid var(--line); }
+td.n, th.n { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: var(--sunk); overflow: hidden; min-width: 90px; }
+.bar > i { display: block; height: 100%; background: var(--pine); border-radius: 4px; }
+tr.over td.n:last-child { color: var(--bad); font-weight: 700; background: var(--bad-bg); }
+tr.over .bar > i { background: var(--bad); }
+.status { font-weight: 700; font-size: .8rem; }
+.status.paid { color: var(--pine); } .status.inv { color: #B07A10; }
+.note { margin-top: 1rem; font-size: .85rem; color: var(--muted); }
+.disclaim { margin-top: 1rem; font-size: .85rem; color: color-mix(in srgb, var(--on-band) 60%, transparent); }
+
+/* features */
+.feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.2rem 2rem; }
+.feat { display: grid; gap: .5rem; align-content: start; min-width: 0; }
+.feat .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--sunk); display: grid; place-items: center; color: var(--pine); }
+.feat .ic svg { width: 22px; height: 22px; }
+.feat p { color: var(--muted); font-size: 1rem; }
+@media (max-width: 900px) { .feat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .feat-grid { grid-template-columns: 1fr; } }
+
+/* steps */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; counter-reset: s; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 1.5rem; display: grid; gap: .6rem; align-content: start; min-width: 0; }
+.step::before { counter-increment: s; content: counter(s); font: 600 .85rem/1 var(--f-mono); color: var(--gold-ink); background: color-mix(in srgb, var(--gold) 22%, transparent); width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; }
+.step p { color: var(--muted); }
+.step .time { font: 500 .8rem/1 var(--f-mono); color: var(--pine); }
+@media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+
+/* platforms */
+.plat { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.plat div { background: var(--bg); padding: 1.3rem; min-width: 0; }
+.plat b { display: block; font: 700 1.05rem/1.3 var(--f-display); color: var(--ink); }
+.plat span { font-size: .92rem; color: var(--muted); }
+@media (max-width: 820px) { .plat { grid-template-columns: repeat(2, 1fr); } }
+
+/* pricing */
+.pricing { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+.pricing > * { min-width: 0; }
+.price-card { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 22px; padding: clamp(1.5rem, 4vw, 2.4rem); display: grid; gap: 1.2rem; }
+.price-row { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.price-big { font: 800 4rem/1 var(--f-display); color: var(--ink); letter-spacing: -0.04em; }
+.price-row small { color: var(--muted); font-size: 1rem; }
+.incl { list-style: none; padding: 0; margin: 0; display: grid; gap: .55rem; }
+.incl li { display: grid; grid-template-columns: 22px 1fr; gap: .6rem; align-items: start; }
+.incl li::before { content: ""; width: 18px; height: 18px; margin-top: 4px; border-radius: 50%; background: var(--pine) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat; }
+.price-card .btn { width: 100%; padding-block: 1.15rem; font-size: 1.05rem; }
+.fine { font-size: .85rem; color: var(--muted); text-align: center; }
+.checkout-note { display: none; font-size: .85rem; background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold-ink); padding: .7rem .9rem; border-radius: 10px; }
+.checkout-note.show { display: block; }
+.guarantee { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: start; margin-top: 1.6rem; }
+.guarantee .seal { width: 54px; height: 54px; border-radius: 50%; border: 2px dashed var(--pine); display: grid; place-items: center; font: 700 .8rem/1 var(--f-mono); color: var(--pine); }
+@media (max-width: 860px) { .pricing { grid-template-columns: 1fr; } }
+
+/* faq */
+.faq { max-width: 780px; }
+details { border-bottom: 1px solid var(--line); }
+summary { cursor: pointer; list-style: none; padding: 1.15rem 2.5rem 1.15rem 0; font: 600 1.08rem/1.4 var(--f-body); color: var(--ink); position: relative; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; position: absolute; right: .3rem; top: 50%; transform: translateY(-50%); font: 400 1.6rem/1 var(--f-mono); color: var(--pine); transition: transform .2s; }
+details[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+details p { padding-bottom: 1.2rem; color: var(--muted); max-width: 65ch; }
+
+
+/* dashboard extras */
+.banner { margin-top: 1rem; padding: .75rem 1rem; border-radius: 10px; background: color-mix(in srgb, var(--pine) 12%, transparent); color: var(--pine); font-weight: 700; font-size: .92rem; }
+.od { font-style: normal; color: var(--bad); font-weight: 700; }
+.od-pill { font: 700 .78rem/1 var(--f-mono); color: var(--bad); background: var(--bad-bg); padding: .3rem .5rem; border-radius: 6px; white-space: nowrap; }
+tr.over-row td { background: color-mix(in srgb, var(--bad-bg) 55%, transparent); }
+
+/* rate calculator */
+.rate-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(2rem, 5vw, 4rem); align-items: start; }
+.rate-grid > * { min-width: 0; }
+.rate-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.8rem); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.field { display: grid; gap: .4rem; min-width: 0; align-content: end; }
+.field:first-child { grid-column: 1 / -1; }
+.field label { font-weight: 600; font-size: .9rem; color: var(--ink); }
+.inp { display: flex; align-items: center; gap: .4rem; border: 1.5px solid var(--line); border-radius: 10px; padding: 0 .8rem; background: var(--bg); }
+.inp:focus-within { border-color: var(--pine); }
+.inp span { color: var(--muted); font: 500 .9rem/1 var(--f-mono); }
+.inp input { flex: 1; min-width: 0; border: 0; background: transparent; padding: .75rem 0; font: 600 1.05rem/1 var(--f-mono); color: var(--ink); outline: none; }
+.rate-out { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; background: var(--band); color: var(--on-band); border-radius: 14px; padding: 1rem; }
+.rate-out div { min-width: 0; }
+.rate-out small { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; opacity: .75; font-weight: 600; }
+.rate-out b { font: 700 clamp(1.1rem, .8rem + 1.2vw, 1.6rem)/1.3 var(--f-mono); color: var(--gold); }
+.rate-card .fine { grid-column: 1 / -1; }
+@media (max-width: 860px) { .rate-grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .rate-card { grid-template-columns: 1fr; } .rate-out { grid-template-columns: 1fr; } }
+
+/* comparison */
+table.cmp { min-width: 620px; font-size: .95rem; }
+table.cmp th { background: transparent; color: var(--muted); border-bottom: 2px solid var(--line); font-size: .85rem; }
+table.cmp th.us { color: var(--ink); }
+table.cmp td { padding: .8rem .7rem; }
+table.cmp td:first-child { font-weight: 600; color: var(--ink); }
+table.cmp .us { background: color-mix(in srgb, var(--pine) 9%, transparent); color: var(--pine); font-weight: 700; }
+
+/* footer */
+footer { border-top: 1px solid var(--line); padding-block: 2.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: .9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between; align-items: center; }
+
+/* mobile sticky buy */
+.mbuy { display: none; }
+@media (max-width: 760px) {
+  .mbuy { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; padding: .7rem max(16px, env(safe-area-inset-left, 0px)) calc(.7rem + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--line); transform: translateY(110%); transition: transform .25s ease; }
+  .mbuy.show { transform: none; }
+  .mbuy .btn { width: 100%; }
+  footer { padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); }
+}
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Steady home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#12352B"/><path d="M6 21h4v-8h4v12h4V9h4v8h4" fill="none" stroke="#F2B33D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Steady
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#inside">What's inside</a>
+      <a href="#rate">Rate calculator</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price">$19</span></a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div>
+      <p class="eyebrow">For freelancers, creators &amp; side-hustlers</p>
+      <h1 style="margin-top:1rem">Lumpy income.<span class="flat">Steady paycheck.</span></h1>
+      <p class="lede">Steady is a spreadsheet for people whose income changes every month. It sets aside your tax, tracks your budget and unpaid invoices, and pays you the same salary every month from a buffer that big months top up and slow months draw down.</p>
+      <div class="hero-cta">
+        <a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price">$19</span></a>
+        <a class="btn btn-ghost" href="#inside">See inside</a>
+      </div>
+      <div class="works" aria-label="Compatible apps">
+        <span>Excel</span><span>Google Sheets</span><span>Apple Numbers</span><span>Phone, tablet &amp; desktop</span>
+      </div>
+    </div>
+
+    <figure class="smoother" style="margin:0" aria-labelledby="sm-title">
+      <div class="sm-head">
+        <p class="eyebrow" id="sm-title">Try the Paycheck Smoother</p>
+        <div class="sm-legend" aria-hidden="true">
+          <span><i style="background:var(--pine)"></i>Income</span>
+          <span><i style="background:var(--gold)"></i>Your paycheck</span>
+          <span><i style="background:var(--sky)"></i>Buffer</span>
+        </div>
+      </div>
+      <svg id="chart" viewBox="0 0 520 250" role="img" aria-label="Monthly income bars, your fixed paycheck line and your buffer balance line for one example year"></svg>
+      <div class="sm-control">
+        <label for="pay">Pay yourself each month</label>
+        <output id="payOut" for="pay" class="num">$3,500</output>
+        <input type="range" id="pay" min="2500" max="6000" step="100" value="3500">
+      </div>
+      <div class="sm-stats">
+        <div id="stLow"><small>Lowest buffer</small><b>—</b></div>
+        <div id="stEnd"><small>Ends the year</small><b>—</b></div>
+        <div id="stTax"><small>Tax saved</small><b>—</b></div>
+      </div>
+      <p class="sm-verdict" id="verdict" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <section class="pains">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Sound familiar?</p>
+        <h2>Freelance money is unpredictable. Your rent isn't.</h2>
+      </div>
+      <div class="pain-grid">
+        <div class="pain">
+          <p class="q">“Great month… so why am I broke in March?”</p>
+          <p>A $9k month followed by a $3k month makes budgeting feel like guessing.</p>
+          <p class="fix">→ Steady pays you a fixed salary from a buffer.</p>
+        </div>
+        <div class="pain">
+          <p class="q">“Wait, I owe how much tax?”</p>
+          <p>Nobody withholds for you, so the bill arrives all at once.</p>
+          <p class="fix">→ Every paid invoice auto-calculates your set-aside.</p>
+        </div>
+        <div class="pain">
+          <p class="q">“Did Acme ever pay that invoice?”</p>
+          <p>Unpaid work hides in your inbox while you wonder where the money went.</p>
+          <p class="fix">→ Unpaid invoices sit front and center on your dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="inside" id="inside">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">What's inside</p>
+        <h2>Nine tabs. Two minutes a week.</h2>
+        <p class="lede">You log income and expenses. Everything else is calculated for you: the dashboard, your safe paycheck, quarterly tax, overdue invoices, your hourly rate and your goals.</p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Spreadsheet tabs">
+        <button class="tab" role="tab" id="t-dash" aria-selected="true" aria-controls="p-dash">Dashboard</button>
+        <button class="tab" role="tab" id="t-smooth" aria-selected="false" aria-controls="p-smooth" tabindex="-1">Paycheck Smoother</button>
+        <button class="tab" role="tab" id="t-tax" aria-selected="false" aria-controls="p-tax" tabindex="-1">Tax</button>
+        <button class="tab" role="tab" id="t-inc" aria-selected="false" aria-controls="p-inc" tabindex="-1">Invoices</button>
+        <button class="tab" role="tab" id="t-rate" aria-selected="false" aria-controls="p-rate" tabindex="-1">Rate</button>
+        <button class="tab" role="tab" id="t-goals" aria-selected="false" aria-controls="p-goals" tabindex="-1">Goals</button>
+      </div>
+
+      <div class="sheet">
+        <div class="sheet-bar"><i></i><i></i><i></i><span>Steady-Freelancer-Money-System.xlsx</span></div>
+
+        <div class="panel" role="tabpanel" id="p-dash" aria-labelledby="t-dash">
+          <div class="panel-top"><h3>Dashboard</h3><span class="pill-month">August ▾</span></div>
+          <div class="kpis">
+            <div class="kpi"><small>Income received</small><b>8,174</b><span>Year to date 50,386</span></div>
+            <div class="kpi k-red"><small>Total spent</small><b>3,440</b><span>Business 363 · Personal 3,077</span></div>
+            <div class="kpi k-gold"><small>Set aside for tax</small><b>2,044</b><span>Year to date 12,597</span></div>
+            <div class="kpi"><small>Net this month</small><b>2,690</b><span>Savings rate 33%</span></div>
+            <div class="kpi k-sky"><small>Buffer balance</small><b>11,648</b><span>3.3 months of runway</span></div>
+            <div class="kpi k-amber"><small>Unpaid invoices</small><b>6,000</b><span>3 waiting · <em class="od">1 overdue</em></span></div>
+          </div>
+          <p class="banner">✓ Your paycheck of 3,500 is sustainable. Safe paycheck so far: 3,500.</p>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Category</th><th class="n">Budget</th><th class="n">Spent</th><th>Progress</th><th class="n">Left</th></tr></thead>
+              <tbody id="budgetRows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-smooth" aria-labelledby="t-smooth" hidden>
+          <div class="panel-top"><h3>Paycheck Smoother</h3><span class="pill-month">Year 2026</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Buffer account</th><th class="n">May</th><th class="n">Jun</th><th class="n">Jul</th><th class="n">Aug</th><th class="n">Sep</th></tr></thead>
+              <tbody>
+                <tr><td>Buffer at start of month</td><td class="n">6,337</td><td class="n">5,041</td><td class="n">6,630</td><td class="n">9,380</td><td class="n">11,648</td></tr>
+                <tr><td>+ Income received</td><td class="n">3,416</td><td class="n">7,260</td><td class="n">8,779</td><td class="n">8,174</td><td class="n">4,509</td></tr>
+                <tr><td>− Tax set-aside</td><td class="n">−854</td><td class="n">−1,815</td><td class="n">−2,195</td><td class="n">−2,044</td><td class="n">−1,127</td></tr>
+                <tr><td>− Business expenses</td><td class="n">−358</td><td class="n">−356</td><td class="n">−334</td><td class="n">−363</td><td class="n">−1,754</td></tr>
+                <tr><td>− Your paycheck</td><td class="n">−3,500</td><td class="n">−3,500</td><td class="n">−3,500</td><td class="n">−3,500</td><td class="n">−3,500</td></tr>
+                <tr><td><strong>Buffer at end of month</strong></td><td class="n"><strong>5,041</strong></td><td class="n"><strong>6,630</strong></td><td class="n"><strong>9,380</strong></td><td class="n"><strong>11,648</strong></td><td class="n"><strong>9,775</strong></td></tr>
+                <tr><td>Months of runway</td><td class="n">1.4</td><td class="n">1.9</td><td class="n">2.7</td><td class="n">3.3</td><td class="n">2.8</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Income swung from 3,416 to 8,779 a month. The paycheck stayed at 3,500 every month. Runway below your target turns red.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-tax" aria-labelledby="t-tax" hidden>
+          <div class="panel-top"><h3>Tax tracker</h3><span class="pill-month">Quarterly</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Period</th><th class="n">Set aside</th><th class="n">Paid</th><th class="n">Still to pay</th><th>Due date</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Q1 · Jan–Mar</td><td class="n">3,316</td><td class="n">3,316</td><td class="n">–</td><td class="num">2026-04-15</td><td><span class="status paid">✓ Paid</span></td></tr>
+                <tr><td>Q2 · Apr–May</td><td class="n">3,228</td><td class="n">3,228</td><td class="n">–</td><td class="num">2026-06-15</td><td><span class="status paid">✓ Paid</span></td></tr>
+                <tr><td>Q3 · Jun–Aug</td><td class="n">6,053</td><td class="n">6,054</td><td class="n">–</td><td class="num">2026-09-15</td><td><span class="status paid">✓ Paid</span></td></tr>
+                <tr><td>Q4 · Sep–Dec</td><td class="n">5,420</td><td class="n">–</td><td class="n">5,420</td><td class="num">2027-01-15</td><td><span class="status inv">Upcoming</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Includes a year-to-date business profit &amp; loss for your accountant. Periods and due dates are editable for any country.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-inc" aria-labelledby="t-inc" hidden>
+          <div class="panel-top"><h3>Income &amp; invoices</h3><span class="pill-month">Net 30</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Client</th><th>Description</th><th class="n">Amount</th><th>Status</th><th>Overdue</th></tr></thead>
+              <tbody>
+                <tr><td class="num">2026-08-03</td><td>Northwind Studio</td><td>Monthly retainer</td><td class="n">2,400.00</td><td><span class="status paid">Paid</span></td><td></td></tr>
+                <tr><td class="num">2026-08-11</td><td>Upwork / Fiverr</td><td>Website build</td><td class="n">4,200.00</td><td><span class="status paid">Paid</span></td><td></td></tr>
+                <tr><td class="num">2026-08-19</td><td>Bluebird Agency</td><td>Logo refresh</td><td class="n">1,200.00</td><td><span class="status paid">Paid</span></td><td></td></tr>
+                <tr class="over-row"><td class="num">2026-08-24</td><td>Bluebird Agency</td><td>Social media kit</td><td class="n">950.00</td><td><span class="status inv">Invoiced</span></td><td><span class="od-pill">16 days</span></td></tr>
+                <tr><td class="num">2026-08-28</td><td>Digital product sales</td><td>Template sales</td><td class="n">374.00</td><td><span class="status paid">Paid</span></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Set your payment terms once. Unpaid invoices past their due date light up red, and the tax set-aside fills in when you mark an invoice Paid.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-rate" aria-labelledby="t-rate" hidden>
+          <div class="panel-top"><h3>Rate calculator</h3><span class="pill-month">From your Setup</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>What you need to charge</th><th class="n">Amount</th></tr></thead>
+              <tbody>
+                <tr><td>Yearly take-home pay + business costs</td><td class="n">48,600</td></tr>
+                <tr><td>Revenue needed (after 25% tax, 10% cushion)</td><td class="n">71,280</td></tr>
+                <tr><td>Billable hours (46 weeks × 25 h)</td><td class="n">1,150</td></tr>
+                <tr><td><strong>Minimum hourly rate</strong></td><td class="n"><strong>61.98</strong></td></tr>
+                <tr><td><strong>Minimum day rate</strong></td><td class="n"><strong>372</strong></td></tr>
+                <tr><td>On pace this year?</td><td class="n"><span class="status paid">✓ Yes</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Change any input to test a scenario: fewer hours, more time off, a raise.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-goals" aria-labelledby="t-goals" hidden>
+          <div class="panel-top"><h3>Savings goals</h3><span class="pill-month">Auto-calculated</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Goal</th><th class="n">Target</th><th class="n">Saved</th><th>Progress</th><th class="n">Save / month</th></tr></thead>
+              <tbody>
+                <tr><td>Emergency fund (3 months)</td><td class="n">10,500</td><td class="n">6,000</td><td><div class="bar"><i style="width:57%"></i></div></td><td class="n">2,250</td></tr>
+                <tr><td>Tax bill reserve</td><td class="n">9,000</td><td class="n">4,500</td><td><div class="bar"><i style="width:50%"></i></div></td><td class="n">750</td></tr>
+                <tr><td>New laptop</td><td class="n">2,200</td><td class="n">650</td><td><div class="bar"><i style="width:30%"></i></div></td><td class="n">310</td></tr>
+                <tr><td>Vacation</td><td class="n">3,000</td><td class="n">900</td><td><div class="bar"><i style="width:30%"></i></div></td><td class="n">233</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Set a target and a date. Steady tells you how much to save each month to get there.</p>
+        </div>
+      </div>
+      <p class="disclaim">Shown with the sample data included in the download (a fictional designer's year).</p>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Everything a freelancer's budget needs</p>
+        <h2>Built for income that doesn't arrive on the 1st.</h2>
+      </div>
+      <div class="feat-grid">
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 12h18" stroke-dasharray="2 3"/></svg></div><h3>Paycheck Smoother</h3><p>Pay yourself one steady salary. Your buffer and months of runway update as you log.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div><h3>Safe paycheck</h3><p>Steady averages your real months and tells you the most you can pay yourself without draining the buffer.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></div><h3>Quarterly tax tracker</h3><p>Set-aside per period vs what you've paid, with due dates and status. Editable for any country.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Overdue invoice alerts</h3><p>Set your payment terms once. Late invoices turn red and show up on the dashboard.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19L19 5"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></div><h3>Rate calculator</h3><p>The hourly and day rate you need to fund your paycheck, business costs, tax and a cushion.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h3>Budget vs actual</h3><p>25 Business and Personal categories with progress bars and red alerts when you overspend.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></div><h3>Income by client</h3><p>See who really pays your bills, with a warning when one client is more than half your income.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 10v10"/></svg></div><h3>Business P&amp;L</h3><p>Year-to-date income, business costs, profit and tax paid on one page, ready for your accountant.</p></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></div><h3>Savings goals</h3><p>Emergency fund, tax bill, new laptop. Track progress and get a monthly savings target.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rate" class="rate-sec" style="padding-top:0">
+    <div class="wrap rate-grid">
+      <div class="sec-head" style="margin:0">
+        <p class="eyebrow">Free tool</p>
+        <h2>What should you charge?</h2>
+        <p class="lede">The same math as Steady's Rate tab. Most freelancers who try it find they've been undercharging.</p>
+      </div>
+      <form class="rate-card" id="rateForm" novalidate>
+        <div class="field"><label for="rPay">Monthly take-home pay you want</label><div class="inp"><span>$</span><input id="rPay" type="number" inputmode="numeric" min="0" step="100" value="4000"></div></div>
+        <div class="field"><label for="rCost">Monthly business costs</label><div class="inp"><span>$</span><input id="rCost" type="number" inputmode="numeric" min="0" step="50" value="500"></div></div>
+        <div class="field"><label for="rTax">Tax set-aside</label><div class="inp"><input id="rTax" type="number" inputmode="numeric" min="0" max="70" step="1" value="25"><span>%</span></div></div>
+        <div class="field"><label for="rHrs">Billable hours per week</label><div class="inp"><input id="rHrs" type="number" inputmode="numeric" min="1" max="80" step="1" value="25"><span>h</span></div></div>
+        <div class="field"><label for="rOff">Weeks off per year</label><div class="inp"><input id="rOff" type="number" inputmode="numeric" min="0" max="40" step="1" value="6"><span>wk</span></div></div>
+        <div class="rate-out" aria-live="polite">
+          <div><small>Minimum hourly rate</small><b id="oHour">—</b></div>
+          <div><small>Day rate (6 h)</small><b id="oDay">—</b></div>
+          <div><small>Revenue needed / month</small><b id="oMonth">—</b></div>
+        </div>
+        <p class="fine" style="text-align:left">Includes a 10% cushion for slow months and unpaid invoices.</p>
+      </form>
+    </div>
+  </section>
+
+  <section id="compare" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">How Steady compares</p>
+        <h2>App features. Spreadsheet price.</h2>
+      </div>
+      <div class="tbl-wrap cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th></th><th class="us">Steady</th><th>Budgeting apps</th><th>Typical budget templates</th></tr></thead>
+          <tbody>
+            <tr><td>Price</td><td class="us"><strong>$19 once</strong></td><td>$79–$109 a year</td><td>$13–$30 once</td></tr>
+            <tr><td>Built for irregular income</td><td class="us">✓</td><td>Some</td><td>Some</td></tr>
+            <tr><td>Safe-paycheck recommendation</td><td class="us">✓</td><td>–</td><td>Rare</td></tr>
+            <tr><td>Quarterly tax tracker with due dates</td><td class="us">✓</td><td>Some</td><td>Some</td></tr>
+            <tr><td>Overdue invoice alerts</td><td class="us">✓</td><td>–</td><td>Rare</td></tr>
+            <tr><td>Rate calculator</td><td class="us">✓</td><td>–</td><td>–</td></tr>
+            <tr><td>Bank sync</td><td class="us">– (your data stays private)</td><td>✓</td><td>–</td></tr>
+            <tr><td>Excel, Google Sheets &amp; Numbers</td><td class="us">✓ all three</td><td>App only</td><td>Usually one</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Based on public listings and pricing pages for popular budgeting apps and Etsy/Payhip spreadsheet templates, October 2026.</p>
+    </div>
+  </section>
+
+  <section id="how" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">How it works</p>
+        <h2>Set up in 10 minutes. Then just log.</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><h3>Download &amp; open</h3><p>Open the file in Excel or Numbers, or upload it to Google Sheets for free phone sync.</p><span class="time">1 minute</span></div>
+        <div class="step"><h3>Fill in Setup</h3><p>Your tax rate, the paycheck you want, your clients and budget categories. Change them any time.</p><span class="time">10 minutes, once</span></div>
+        <div class="step"><h3>Log as money moves</h3><p>Add invoices and expenses from your phone or laptop. The dashboard, year view and goals update instantly.</p><span class="time">2 minutes a week</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Works everywhere</p>
+        <h2>No app to install. No subscription.</h2>
+        <p class="lede">Steady is a regular spreadsheet file, so it's yours forever, works offline and keeps your data private.</p>
+      </div>
+      <div class="plat">
+        <div><b>Microsoft Excel</b><span>Windows, Mac, web, iPhone, iPad and Android</span></div>
+        <div><b>Google Sheets</b><span>Free. Syncs to every device</span></div>
+        <div><b>Apple Numbers</b><span>Mac, iPhone and iPad</span></div>
+        <div><b>LibreOffice</b><span>Free on Windows, Mac and Linux</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing" style="padding-top:0">
+    <div class="wrap pricing">
+      <div class="sec-head" style="margin:0">
+        <p class="eyebrow">Pricing</p>
+        <h2>One price. Yours for good.</h2>
+        <p class="lede">Budgeting apps charge $10–$15 every month. Steady costs less than two months of one, and you pay once.</p>
+        <div class="guarantee">
+          <div class="seal">30<br>day</div>
+          <p><strong style="color:var(--ink)">Money-back guarantee.</strong> If Steady doesn't help you get a handle on your income within 30 days, email us and we'll refund you in full.</p>
+        </div>
+      </div>
+      <div class="price-card">
+        <div class="price-row"><span class="price-big">$19</span><small>one-time · USD</small></div>
+        <ul class="incl">
+          <li>Steady spreadsheet (.xlsx): 9 tabs, including Dashboard, Paycheck Smoother, Tax, Rate and Goals</li>
+          <li>Demo file with a full year of sample data to explore</li>
+          <li>Works in Excel, Google Sheets, Numbers &amp; LibreOffice</li>
+          <li>Any currency. Reuse it every year</li>
+          <li>Free updates and email support</li>
+        </ul>
+        <a class="btn btn-buy js-buy" id="buyMain" href="#pricing">Buy Steady, instant download</a>
+        <p class="checkout-note" id="checkoutNote" role="status">Checkout opens in the next few days. Bookmark this page and come back soon!</p>
+        <p class="fine">Secure checkout. Download link arrives by email right away.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" style="padding-top:0">
+    <div class="wrap faq">
+      <div class="sec-head"><p class="eyebrow">FAQ</p><h2>Questions</h2></div>
+      <details><summary>Do I need Excel?</summary><p>No. The file opens in Google Sheets (free), Apple Numbers (free on Apple devices) or LibreOffice (free). Upload it to Google Drive and choose "Open with Google Sheets" to use it on your phone.</p></details>
+      <details><summary>I'm not a spreadsheet person. Is it hard?</summary><p>You only type in the cream-colored cells. Dropdowns handle clients and categories, and a Start Here tab walks you through setup in five short steps. Everything else calculates itself.</p></details>
+      <details><summary>Does it handle quarterly taxes?</summary><p>Yes. The Tax tab adds up your set-aside for each tax period, tracks what you've paid and shows due dates with a status (Paid, Due in X days, Overdue). It defaults to the US quarterly schedule, and you can change the periods and dates to match your country. It's a savings tracker, not tax advice.</p></details>
+      <details><summary>Does it work outside the US?</summary><p>Yes. Pick any currency symbol, and set the tax set-aside percentage that fits where you live. The set-aside is a savings estimate, not tax advice.</p></details>
+      <details><summary>I'm not a freelancer. Is it for me?</summary><p>If your income changes month to month (contractors, creators, consultants, gig workers, small-business owners, commission sales), Steady was built for you. Salaried side-hustlers use it to track the side income separately.</p></details>
+      <details><summary>Does it connect to my bank?</summary><p>No, on purpose. Your financial data never leaves your file. Many people find a weekly two-minute log also makes them more aware of their spending.</p></details>
+      <details><summary>How do I get the file?</summary><p>Right after checkout you'll get an email with a download link (a .zip containing the spreadsheet and the demo file). You can download it again any time from that email.</p></details>
+      <details><summary>What if it's not for me?</summary><p>Email us within 30 days for a full refund. No questions asked.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#top" style="font-size:1.1rem"><svg viewBox="0 0 32 32" aria-hidden="true" style="width:24px;height:24px"><rect width="32" height="32" rx="8" fill="#12352B"/><path d="M6 21h4v-8h4v12h4V9h4v8h4" fill="none" stroke="#F2B33D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Steady</a>
+    <span id="supportLine" hidden>Support: <span class="num" id="supportEmail"></span></span>
+    <span>© 2026 Steady. Not financial or tax advice.</span>
+  </div>
+</footer>
+
+<div class="mbuy" id="mbuy"><a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price">$19</span></a></div>
+
+<script>
+/* ===================== SETTINGS: edit these two lines ===================== */
+const CHECKOUT_URL = "";              // e.g. "https://yourname.gumroad.com/l/steady"
+const SUPPORT_EMAIL = "";             // e.g. "hello@yourdomain.com"
+/* ========================================================================= */
+
+(function () {
+  // Checkout wiring
+  const buys = document.querySelectorAll(".js-buy");
+  if (CHECKOUT_URL) {
+    buys.forEach(a => { a.href = CHECKOUT_URL; a.target = "_blank"; a.rel = "noopener"; });
+  } else {
+    buys.forEach(a => a.addEventListener("click", () => document.getElementById("checkoutNote").classList.add("show")));
+    document.getElementById("buyMain").addEventListener("click", e => e.preventDefault());
+  }
+  if (SUPPORT_EMAIL) { document.getElementById("supportEmail").textContent = SUPPORT_EMAIL; document.getElementById("supportLine").hidden = false; }
+
+  // Nav border + mobile sticky buy
+  const nav = document.getElementById("nav"), mbuy = document.getElementById("mbuy"), pricing = document.getElementById("pricing");
+  const onScroll = () => {
+    nav.classList.toggle("scrolled", scrollY > 8);
+    const r = pricing.getBoundingClientRect();
+    const inPricing = r.top < innerHeight && r.bottom > 0;
+    mbuy.classList.toggle("show", scrollY > 500 && !inPricing);
+  };
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+
+  // Budget rows (demo August)
+  const budget = [["Software & subscriptions",120,96],["Coworking / office",180,175],["Marketing & ads",60,67],["Rent / mortgage",1500,1500],["Groceries",450,377],["Eating out",200,161],["Transport",150,86],["Fun & hobbies",150,89]];
+  const fmt = n => n.toLocaleString("en-US");
+  document.getElementById("budgetRows").innerHTML = budget.map(([c,b,s]) => {
+    const left = b - s, pct = Math.min(100, Math.round(s / b * 100));
+    return `<tr class="${left < 0 ? "over" : ""}"><td>${c}</td><td class="n">${fmt(b)}</td><td class="n">${fmt(s)}</td><td><div class="bar"><i style="width:${pct}%"></i></div></td><td class="n">${left === 0 ? "–" : fmt(left)}</td></tr>`;
+  }).join("");
+
+  // Tabs
+  const tabs = [...document.querySelectorAll(".tab")];
+  const select = t => {
+    tabs.forEach(x => { const on = x === t; x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute("aria-controls")).hidden = !on; });
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(t));
+    t.addEventListener("keydown", e => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length]; select(n); n.focus();
+    });
+  });
+
+
+  // Rate calculator (same formula as the spreadsheet's Rate tab)
+  const rIds = ["rPay","rCost","rTax","rHrs","rOff"];
+  const num = id => Math.max(0, parseFloat(document.getElementById(id).value) || 0);
+  function rate() {
+    const pay = num("rPay") * 12, cost = num("rCost") * 12, tax = Math.min(num("rTax"), 90) / 100;
+    const hours = Math.max(0, 52 - num("rOff")) * num("rHrs");
+    const revenue = (pay + cost) / (1 - tax) * 1.1;
+    const hr = hours ? revenue / hours : 0;
+    const f = (v, d) => "$" + v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+    document.getElementById("oHour").textContent = hours ? f(hr, 2) : "—";
+    document.getElementById("oDay").textContent = hours ? f(hr * 6, 0) : "—";
+    document.getElementById("oMonth").textContent = f(revenue / 12, 0);
+  }
+  rIds.forEach(id => document.getElementById(id).addEventListener("input", rate));
+  document.getElementById("rateForm").addEventListener("submit", e => e.preventDefault());
+  rate();
+
+  // Paycheck Smoother (same model as the spreadsheet's Year tab, sample data from the demo file)
+  const MONTHS = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+  const income = [4317,4802,4144,9494,3416,7260,8779,8174,4509,3344,3400,10427];
+  const biz    = [384,1676,336,335,358,356,334,363,1754,471,394,343];
+  const TAX = 0.25, START = 6000;
+  const SAFE = Math.floor(income.reduce((t, v, i) => t + v * (1 - TAX) - biz[i], 0) / 12 * 0.9 / 100) * 100;
+  const svg = document.getElementById("chart"), pay = document.getElementById("pay");
+  const W = 520, H = 250, L = 40, R = 8, T = 10, B = 26, MAX = 12000;
+  const x = i => L + (i + 0.5) * (W - L - R) / 12;
+  const y = v => T + (H - T - B) * (1 - Math.max(-2000, Math.min(MAX, v)) / MAX);
+  const bw = (W - L - R) / 12 * 0.56;
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+  function draw() {
+    const p = +pay.value;
+    let buf = START, low = Infinity, lowM = 0, taxTot = 0;
+    const bufs = income.map((inc, i) => { const t = inc * TAX; taxTot += t; buf += inc - t - biz[i] - p; if (buf < low) { low = buf; lowM = i; } return buf; });
+    svg.textContent = "";
+    [0, 4000, 8000, 12000].forEach(v => {
+      svg.append(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "var(--line)", "stroke-width": 1 }));
+      const t = el("text", { x: L - 6, y: y(v) + 3.5, "text-anchor": "end" }); t.textContent = v ? (v / 1000) + "k" : "0"; svg.append(t);
+    });
+    income.forEach((v, i) => {
+      svg.append(el("rect", { x: x(i) - bw / 2, y: y(v), width: bw, height: y(0) - y(v), rx: 3, fill: "var(--pine)", opacity: .9 }));
+      const t = el("text", { x: x(i), y: H - 8, "text-anchor": "middle" }); t.textContent = MONTHS[i]; svg.append(t);
+    });
+    svg.append(el("line", { x1: L, x2: W - R, y1: y(p), y2: y(p), stroke: "var(--gold)", "stroke-width": 3, "stroke-linecap": "round" }));
+    const d = bufs.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+    svg.append(el("path", { d, fill: "none", stroke: "var(--sky)", "stroke-width": 2.5, "stroke-linejoin": "round", "stroke-dasharray": "0" }));
+    bufs.forEach((v, i) => svg.append(el("circle", { cx: x(i), cy: y(v), r: i === lowM ? 4.5 : 2.6, fill: v < 0 ? "var(--bad)" : "var(--sky)", stroke: "var(--surface)", "stroke-width": 1.5 })));
+    if (low < 0) svg.append(el("line", { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: "var(--bad)", "stroke-width": 1, "stroke-dasharray": "3 3" }));
+
+    const money = v => (v < 0 ? "−$" : "$") + Math.abs(Math.round(v)).toLocaleString("en-US");
+    document.getElementById("payOut").textContent = money(p);
+    const lowEl = document.getElementById("stLow");
+    lowEl.querySelector("b").textContent = money(low); lowEl.classList.toggle("bad", low < 0);
+    const endEl = document.getElementById("stEnd");
+    endEl.querySelector("b").textContent = money(bufs[11]); endEl.classList.toggle("bad", bufs[11] < 0);
+    document.getElementById("stTax").querySelector("b").textContent = money(taxTot);
+    const names = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    document.getElementById("verdict").innerHTML = low < 0
+      ? `<strong>Too high.</strong> Your buffer runs dry in ${names[lowM]}. Steady shows this months ahead, so you can adjust before it happens.`
+      : `<strong>Sustainable.</strong> Income ranged from $3,344 to $10,427, and you still got ${money(p)} every month. ${p > SAFE ? "Above the safe paycheck of " + money(SAFE) + ", so the buffer shrinks over time." : "Steady's safe paycheck for this year: " + money(SAFE) + "."}`;
+  }
+  pay.addEventListener("input", draw);
+  draw();
+})();
+</script>
+</body>
+</html>
