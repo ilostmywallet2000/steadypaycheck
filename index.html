@@ -228,6 +228,9 @@ tr.over .bar > i { background: var(--bad); }
 .guarantee .seal { width: 54px; height: 54px; border-radius: 50%; border: 2px dashed var(--pine); display: grid; place-items: center; font: 700 .8rem/1 var(--f-mono); color: var(--pine); }
 @media (max-width: 860px) { .pricing { grid-template-columns: 1fr; } }
 
+.was { font: 600 1.6rem/1 var(--f-mono); color: var(--muted); }
+.founding { font-weight: 700; color: var(--gold-ink); background: color-mix(in srgb, var(--gold) 18%, transparent); padding: .6rem .9rem; border-radius: 10px; font-size: .95rem; }
+
 /* faq */
 .faq { max-width: 780px; }
 details { border-bottom: 1px solid var(--line); }
@@ -322,7 +325,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
   <div class="wrap">
     <a class="logo" href="#top" aria-label="Steady home">
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#12352B"/><path d="M6 21h4v-8h4v12h4V9h4v8h4" fill="none" stroke="#F2B33D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Steady
+      Steady Paycheck
     </a>
     <nav class="nav-links" aria-label="Sections">
       <a href="#weather">Money Weather</a>
@@ -331,7 +334,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price">$19</span></a>
+    <a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price js-price">$19</span></a>
   </div>
 </header>
 
@@ -342,7 +345,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
       <h1 style="margin-top:1rem">Lumpy income.<span class="flat">Steady paycheck.</span></h1>
       <p class="lede">Steady is a spreadsheet for people whose income changes every month. It sets aside your tax, tracks your budget and unpaid invoices, and pays you the same salary every month from a buffer that big months top up and slow months draw down.</p>
       <div class="hero-cta">
-        <a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price">$19</span></a>
+        <a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price js-price">$19</span></a>
         <a class="btn btn-ghost" href="#inside">See inside</a>
       </div>
       <div class="works" aria-label="Compatible apps">
@@ -439,7 +442,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
       </div>
 
       <div class="sheet">
-        <div class="sheet-bar"><i></i><i></i><i></i><span>Steady-Freelancer-Money-System.xlsx</span></div>
+        <div class="sheet-bar"><i></i><i></i><i></i><span>Steady-Paycheck.xlsx</span></div>
 
         <div class="panel" role="tabpanel" id="p-dash" aria-labelledby="t-dash">
           <div class="panel-top"><h3>Dashboard</h3><span class="pill-month">August ▾</span></div>
@@ -601,9 +604,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
       </div>
       <div class="tbl-wrap cmp-wrap">
         <table class="cmp">
-          <thead><tr><th></th><th class="us">Steady</th><th>Budgeting apps</th><th>Typical budget templates</th></tr></thead>
+          <thead><tr><th></th><th class="us">Steady Paycheck</th><th>Budgeting apps</th><th>Typical budget templates</th></tr></thead>
           <tbody>
-            <tr><td>Price</td><td class="us"><strong>$19 once</strong></td><td>$79–$109 a year</td><td>$13–$30 once</td></tr>
+            <tr><td>Price</td><td class="us"><strong><span class="js-price">$19</span> once</strong></td><td>$79–$109 a year</td><td>$13–$30 once</td></tr>
             <tr><td>Built for irregular income</td><td class="us">✓</td><td>Some</td><td>Some</td></tr>
             <tr><td>6-month forecast from your pipeline</td><td class="us">✓ Money Weather</td><td>–</td><td>–</td></tr>
             <tr><td>Safe-paycheck recommendation</td><td class="us">✓</td><td>–</td><td>Rare</td></tr>
@@ -661,10 +664,12 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
         </div>
       </div>
       <div class="price-card">
-        <div class="price-row"><span class="price-big">$19</span><small>one-time · USD</small></div>
+        <div class="price-row"><span class="price-big js-price">$19</span><s class="was" id="wasPrice" hidden>$19</s><small>one-time · USD</small></div>
+        <p class="founding" id="founding" hidden></p>
         <ul class="incl">
           <li>Steady spreadsheet (.xlsx): 10 tabs, including Money Weather forecast, Dashboard, Paycheck Smoother, Tax, Rate and Goals</li>
           <li>Demo file with a full year of sample data to explore</li>
+          <li>Quick-start guide (PDF): set up in 10 minutes</li>
           <li>Works in Excel, Google Sheets, Numbers &amp; LibreOffice</li>
           <li>Any currency. Reuse it every year</li>
           <li>Free updates and email support</li>
@@ -685,7 +690,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
       <details><summary>Does it work outside the US?</summary><p>Yes. Pick any currency symbol, and set the tax set-aside percentage that fits where you live. The set-aside is a savings estimate, not tax advice.</p></details>
       <details><summary>I'm not a freelancer. Is it for me?</summary><p>If your income changes month to month (contractors, creators, consultants, gig workers, small-business owners, commission sales), Steady was built for you. Salaried side-hustlers use it to track the side income separately.</p></details>
       <details><summary>Does it connect to my bank?</summary><p>No, on purpose. Your financial data never leaves your file. Many people find a weekly two-minute log also makes them more aware of their spending.</p></details>
-      <details><summary>How do I get the file?</summary><p>Right after checkout you'll get an email with a download link (a .zip containing the spreadsheet and the demo file). You can download it again any time from that email.</p></details>
+      <details><summary>How do I get the file?</summary><p>Right after checkout you'll get an email with a download link (a .zip with the spreadsheet, a demo file and a 2-page quick-start guide). You can download it again any time from that email.</p></details>
       <details><summary>What if it's not for me?</summary><p>Email us within 30 days for a full refund. No questions asked.</p></details>
     </div>
   </section>
@@ -693,18 +698,21 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
 
 <footer>
   <div class="wrap">
-    <a class="logo" href="#top" style="font-size:1.1rem"><svg viewBox="0 0 32 32" aria-hidden="true" style="width:24px;height:24px"><rect width="32" height="32" rx="8" fill="#12352B"/><path d="M6 21h4v-8h4v12h4V9h4v8h4" fill="none" stroke="#F2B33D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Steady</a>
+    <a class="logo" href="#top" style="font-size:1.1rem"><svg viewBox="0 0 32 32" aria-hidden="true" style="width:24px;height:24px"><rect width="32" height="32" rx="8" fill="#12352B"/><path d="M6 21h4v-8h4v12h4V9h4v8h4" fill="none" stroke="#F2B33D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Steady Paycheck</a>
     <span id="supportLine" hidden>Support: <span class="num" id="supportEmail"></span></span>
-    <span>© 2026 Steady. Not financial or tax advice.</span>
+    <span>© 2026 Steady Paycheck. Not financial or tax advice.</span>
   </div>
 </footer>
 
-<div class="mbuy" id="mbuy"><a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price">$19</span></a></div>
+<div class="mbuy" id="mbuy"><a class="btn btn-buy js-buy" href="#pricing">Get Steady <span class="price js-price">$19</span></a></div>
 
 <script>
 /* ===================== SETTINGS: edit these two lines ===================== */
 const CHECKOUT_URL = "";              // e.g. "https://yourname.gumroad.com/l/steady"
 const SUPPORT_EMAIL = "";             // e.g. "hello@yourdomain.com"
+const REGULAR_PRICE = 19;
+const FOUNDING_PRICE = 12;            // launch price for the first copies; set to 0 to show the regular price
+const FOUNDING_COPIES = 50;
 /* ========================================================================= */
 
 (function () {
@@ -715,6 +723,15 @@ const SUPPORT_EMAIL = "";             // e.g. "hello@yourdomain.com"
   } else {
     buys.forEach(a => a.addEventListener("click", () => document.getElementById("checkoutNote").classList.add("show")));
     document.getElementById("buyMain").addEventListener("click", e => e.preventDefault());
+  }
+  // Founding price
+  if (FOUNDING_PRICE) {
+    document.querySelectorAll(".js-price").forEach(el => el.textContent = "$" + FOUNDING_PRICE);
+    document.getElementById("wasPrice").textContent = "$" + REGULAR_PRICE;
+    document.getElementById("wasPrice").hidden = false;
+    const f = document.getElementById("founding");
+    f.textContent = `Founding price for the first ${FOUNDING_COPIES} copies, then $${REGULAR_PRICE}.`;
+    f.hidden = false;
   }
   if (SUPPORT_EMAIL) { document.getElementById("supportEmail").textContent = SUPPORT_EMAIL; document.getElementById("supportLine").hidden = false; }
 
